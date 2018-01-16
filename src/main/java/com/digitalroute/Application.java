@@ -9,6 +9,9 @@ public class Application {
 
     public static final String IN_FILE = "INFILE_ascii_big";
 
+    public void a () {
+
+    }
     public static void main(String[] args) {
         /*
         //Create an CallRecordsProcessor an feed it with an anonymous class, to debug its activity
