@@ -5,17 +5,23 @@
 
 package com.digitalroute;
 
+import com.digitalroute.input.CallRecordsProcessor;
+import com.digitalroute.input.MyCallRecordProcessor;
+import com.digitalroute.output.BillingGateway;
+
+import java.io.FileInputStream;
+
 public class Application {
 
-    public static final String IN_FILE = "INFILE_ascii_big";
+    public static final String IN_FILE = "/Users/fredrik.hed/Documents/dev/repos/aggregation/src/main/resources/INFILE_ascii_big";
 
     public void a () {
 
     }
-    public static void main(String[] args) {
-        /*
+    public static void main(String[] args) throws Exception {
+
         //Create an CallRecordsProcessor an feed it with an anonymous class, to debug its activity
-        CallRecordsProcessor processor = new YourImplementation(new BillingGateway() {
+        CallRecordsProcessor processor = new MyCallRecordProcessor(new BillingGateway() {
             @Override
             public void beginBatch() {
             }
@@ -32,10 +38,10 @@ public class Application {
                 System.out.println("logError " +errorCause  +", "+ callId +", "+  seqNum +", "+ aNum +", "+ bNum);
             }
         });
-        ...
+
         //perform processing
-        processor.processBatch(Application.class.getClassLoader().getResourceAsStream(IN_FILE));
-        */
+//        processor.processBatch(Application.class.getClassLoader().getResourceAsStream(IN_FILE));
+          processor.processBatch(new FileInputStream(IN_FILE));
     }
 
 }

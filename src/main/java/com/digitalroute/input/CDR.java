@@ -41,7 +41,11 @@ public class CDR {
         this.duration = duration;
     }
 
-    public String cacheKey() {
-        return callId + " " + aNum + " " + bNum;
+    public String sessionKey() {
+        return aNum + " " + bNum;
+    }
+
+    public boolean isCompleateSessionKey() {
+        return !callId.equals("_");
     }
 }

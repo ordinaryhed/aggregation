@@ -9,7 +9,7 @@ import java.util.*;
 
 public class MyCallRecordProcessor implements CallRecordsProcessor {
     BillingGateway gateWay;
-    Map<String, List<CDR>> cache = new HashMap<>();
+    Map<String, List<Session>> sessions = new HashMap<>();
 
     public MyCallRecordProcessor(BillingGateway gateWay) {
         this.gateWay = gateWay;
@@ -34,20 +34,19 @@ public class MyCallRecordProcessor implements CallRecordsProcessor {
 
     public void processLine(byte[] buffer) {
         CDR cdr = createCDR(buffer);
-        addToCacheOrFluch(cdr);
+        addToSessionOrFluch(cdr);
     }
 
-    public void addToCacheOrFluch(CDR cdr) {
-        List<CDR> list = null;
-        if (cache.containsKey(cdr.cacheKey())) {
-            list = cache.get(cdr.cacheKey());
-        } else {
-            list = new ArrayList<CDR>();
+    public void addToSessionOrFluch(CDR cdr) {
+
+        Session session = addToSessions(cdr);
+
+        if (session == null) {
+            System.out.println("handle no matching session for callId = '_'");
+            return;
         }
 
-        Iterator<CDR> iter = list.iterator();
-
-        list.add(cdr);
+        Iterator<CDR> iter = session.cdrs.iterator();
 
         if (cdr.causeForOutput == 2) {
             int dur = 0;
@@ -57,12 +56,39 @@ public class MyCallRecordProcessor implements CallRecordsProcessor {
             }
 
             gateWay.consume(cdr.callId, cdr.seqNum, cdr.aNum, cdr.bNum, cdr.causeForOutput, dur);
-            cache.remove(cdr.cacheKey());
-        }
-        else {
-            cache.put(cdr.cacheKey(), list);
+//            removeSession(cdr, session);
         }
     }
+
+    private void removeSession(CDR cdr, Session session) {
+        sessions.get(cdr.sessionKey());
+    }
+
+    /**
+     *
+     * @param cdr
+     * @return null if not corresponds to valid session
+     */
+    private Session addToSessions(CDR cdr) {
+        if (sessions.containsKey(cdr.sessionKey()) && cdr.isCompleateSessionKey()) {
+            for (Session existingSession: sessions.get(cdr.sessionKey())) {
+                if (existingSession.callId.equals(cdr.callId)) {
+                    return existingSession;
+                }
+            };
+            Session newSession = new Session(cdr.callId, cdr);
+            sessions.get(cdr.sessionKey()).add(newSession);
+            return newSession;
+        } else if (sessions.containsKey(cdr.sessionKey())) {
+            Session existingSession = sessions.get(cdr.sessionKey()).iterator().next();
+            existingSession.cdrs.add(cdr);
+            return existingSession;
+        }
+
+        // skipp cdrs with callId = '_' if no matching aNum & bNum
+        return null;
+    }
+
 
     public CDR createCDR(byte[] buffer) {
         String in = new String(buffer);
